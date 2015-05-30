@@ -12,7 +12,7 @@
 %V: matrix of dimension n by (s+1) whose columns are basis for the desired
 %Krylov subspace
 
-function [V,T] = computeBasis(A,x,s,alp,bet,gam)
+function V = computeBasis(A,x,s,alp,bet,gam)
 
 %dimension of matrix A
 n = size(A,1);
