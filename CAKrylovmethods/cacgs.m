@@ -37,9 +37,9 @@ r0 = b - A*x0;
 rt0 = r0;
 x(:,1)  = x0;
 r(:,1)  = r0;
-p(:,1)  = zeros(N,1);
-q(:,1)  = zeros(N,1);
-rho_old = 1;
+p(:,1)  = r0;
+u(:,1)  = r0;
+delta(1) = (rt0'*r(:,1));
 
 %Set outer loop iteration count to 0
 k = 0;
@@ -66,22 +66,22 @@ while its < maxits
     P = computeBasis(A,p(:,s*k+1),2*s,alp,bet,gam);
     
     %Compute Krylov basis with starting vector r
-    R = computeBasis(A,r(:,s*k+1),2*s,alp,bet,gam);
+    R = computeBasis(A,r(:,s*k+1),2*s-2,alp,bet,gam);
     
     %Compute Krylov basis with starting vector q
-    Q = computeBasis(A',q(:,s*k+1),2*s,alp,bet,gam);
+    U = computeBasis(A,u(:,s*k+1),2*s-1,alp,bet,gam);
     
     %Construct block "basis change" matrix
-    Tt  = sparse([T, zeros(2*s+1,4*s+3); zeros(2*s+1,2*s+1), T,zeros(2*s+1,2*s+2); zeros(2*s+1,4*s+2), T, zeros(2*s+1,1)]);
+    Tt  = sparse([T, zeros(2*s+1,4*s); zeros(2*s,2*s+1), T(1:end-1,1:end-1),zeros(2*s,2*s); zeros(2*s-1,4*s+1), T(1:end-2,1:end-2), zeros(2*s-1,1)]);
     
     % Initialize CGS coordinate vectors for current outer loop
-    p_c = [[1;zeros(6*s+2,1)],zeros(6*s+3,s)];
-    r_c = [[zeros(2*s+1,1);1;zeros(4*s+1,1)],zeros(6*s+3,s)];
-    q_c = [[zeros(4*s+2,1);1;zeros(2*s,1)],zeros(6*s+3,s)];
-    x_c = zeros(6*s+3,s+1);
+    p_c = [[1;zeros(6*s-1,1)],zeros(6*s,s)];
+    u_c = [[zeros(2*s+1,1);1;zeros(4*s-2,1)],zeros(6*s,s)];
+    r_c = [[zeros(4*s+1,1);1;zeros(2*s-2,1)],zeros(6*s,s)];
+    x_c = zeros(6*s,s+1);
     
     % Compute Gram vector
-    g = rt0'*[P,R,Q];
+    g = rt0'*[P,U,R];
     
     %Begin s inner iterations
     for j = 1:s
@@ -94,50 +94,26 @@ while its < maxits
         its = its + 1;
       
         %Compute scalar rho using Gram vector for inner products
-        rho_new = g*r_c(:,j);
+        alpha(its) = delta(its)/(g*Tt*p_c(:,j));
         
-        %Compute scalar beta
-        beta(its) = rho_new/rho_old;
+        q_c(:,j) = u_c(:,j) - alpha(its)*Tt*p_c(:,j);
         
-        %Update u (auxiliary) coordinate vector
-        u_c(:,j) = r_c(:,j) + beta(its)*q_c(:,j);
+        x_c(:,j+1) = x_c(:,j) + alpha(its)*(u_c(:,j)+q_c(:,j));
+        x(:,s*k+j+1) = [P,U,R]*x_c(:,j+1) + x(:,s*k+1);
         
-        %Update p coordinate vector
-        p_c(:,j+1) = u_c(:,j) + beta(its)*(q_c(:,j)+beta(its)*p_c(:,j));
+        r_c(:,j+1) = r_c(:,j) - alpha(its)*Tt*(u_c(:,j)+q_c(:,j));
+        r(:,s*k+j+1)  = [P,U,R]*r_c(:,j+1);
         
-        %Perform basis change to compute p vector in standard basis (note we wouldn't need to do this
-        %in the inner loop in practice)
-        p(:,s*k+j+1)  = [P,R,Q]*p_c(:,j+1);
-                
-        %Update v (auxiliary) coordinate vector       
-        v_c(:,j) = Tt*p_c(:,j+1);
+        delta(its+1) = g*r_c(:,j+1);
+        
+        beta(its) = delta(its+1)/delta(its);
+        
+        u_c(:,j+1) = r_c(:,j+1) + beta(its)*q_c(:,j);
+        u(:,s*k+j+1)  = [P,U,R]*u_c(:,j+1);
+        
+        p_c(:,j+1) = u_c(:,j+1) + beta(its)*(q_c(:,j)+ beta(its)*p_c(:,j));
+        p(:,s*k+j+1)  = [P,U,R]*p_c(:,j+1);
 
-        %Compute scalar sigma using Gram vector for inner products
-        sigma(its) = g*v_c(:,j);
-        
-        %Compute scalar alpha
-        alpha(its) = rho_new / sigma(its);
-        
-        %Update q coordinate vector
-        q_c(:,j+1) = u_c(:,j) - alpha(its)*v_c(:,j);
-        
-        %Perform basis change to compute q vector in standard basis (note we wouldn't need to do this
-        %in the inner loop in practice)
-        q(:,s*k+j+1)  = [P,R,Q]*q_c(:,j+1);
-        
-        %Update r coordinate vector
-        r_c(:,j+1) = r_c(:,j) - alpha(its)*Tt*(u_c(:,j) + q_c(:,j+1));
-        
-        %Perform basis change to compute r vector in standard basis (note we wouldn't need to do this
-        %in the inner loop in practice)
-        r(:,s*k+j+1)  = [P,R,Q]*r_c(:,j+1);
-
-        %Update x coordinate vector
-        x_c(:,j+1) = x_c(:,j) + alpha(its) *(u_c(:,j) + q_c(:,j+1));
-
-        %Perform basis change to compute x vector in standard basis (note we wouldn't need to do this
-        %in the inner loop in practice)
-        x(:,s*k+j+1) = [P,R,Q]*x_c(:,j+1) + x(:,s*k+1);
         
         %Compute and store true residual norm (note we wouldn't do this in
         %the inner loop in practice)
@@ -150,9 +126,7 @@ while its < maxits
         %Store current solution
         results.x = x(:,s*k+j+1);
         
-        %Store rho for next iteration
-        rho_old = rho_new;
-        
+
     end
     
     %Increment k, outer iteration index

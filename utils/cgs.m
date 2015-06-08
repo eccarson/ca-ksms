@@ -1,8 +1,8 @@
 % Erin Carson
-% cg.m
+% cgs.m
 % Edited 1/14/2015
 
-% Run the CG method to solve Ax=b
+% Run the CGS method to solve Ax=b
 
 %Input:
 %A: square, sparse matrix with dimension n
@@ -21,17 +21,19 @@
 %x: approximate solution computed in each iteration
 %(results.x)
 
-function results = cg(A, b, x0, maxits, tol)
+function results = cgs(A, b, x0, maxits, tol)
 
 %Size of matrix
 N = size(A,1);
 
 %Set initial values for vectors
 r0 = b - A*x0;
-p0 = r0;
+rt0 = r0;
 x(:,1)  = x0;
 r(:,1)  = r0;
-p(:,1)  = p0;
+p(:,1)  = r0;
+u(:,1)  = r0;
+delta(1) = (rt0'*r(:,1));
 
 %Set total number of iterations to 0
 its = 0;
@@ -51,21 +53,23 @@ while its < maxits
      
     %increase iteration count
     its = its + 1;
-       
-    %Compute scalar alpha
-    alpha(its) = r(:,its)'*r(:,its)/(p(:,its)'*A*p(:,its));
 
-    %Update x coordinate vector
-    x(:,its+1) = x(:,its) + alpha(its)*p(:,its);
+    alpha(its) = delta(its)/(rt0'*A*p(:,its));
 
-    %Update r coordinate vector
-    r(:,its+1) = r(:,its) - alpha(its)*A*p(:,its);
+    q(:,its) = u(:,its) - alpha(its)*A*p(:,its);
 
-    %Compute scalar beta
-    beta(its) = (r(:,its+1)'*r(:,its+1))/ (r(:,its)'*r(:,its));
+    x(:,its+1) = x(:,its) + alpha(its)*(u(:,its)+q(:,its));
 
-    %Update p coordinate vector
-    p(:,its+1) = r(:,its+1) + beta(its)*p(:,its);
+    r(:,its+1) = r(:,its) - alpha(its)*A*(u(:,its)+q(:,its));
+
+    delta(its+1) = rt0'*r(:,its+1);
+
+    beta(its) = delta(its+1)/delta(its);
+
+    u(:,its+1) = r(:,its+1) + beta(its)*q(:,its);
+
+    p(:,its+1) = u(:,its+1) + beta(its)*(q(:,its)+ beta(its)*p(:,its));
+
 
     %Compute and store true residual norm 
     results.r_exact_norm(its+1) = norm(b-A*x(:,its+1));
