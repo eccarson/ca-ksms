@@ -48,6 +48,7 @@ its = 0;
 %Initialize initial true and computed residuals
 results.r_exact_norm(1) = norm(b-A*x0);
 results.r_comp_norm(1) = norm(r0);
+results.x = x0;
 
 %Compute real basis parameters
 [alp, bet, gam, T] = basisparams(A, s, basis_type);
