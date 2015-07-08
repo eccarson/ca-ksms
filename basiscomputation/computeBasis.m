@@ -1,5 +1,5 @@
 % Erin Carson
-% CACG_example.m
+% computeBasis.m
 % Edited 1/14/2015
 
 %Input:
