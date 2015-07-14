@@ -2,7 +2,7 @@
 % lejapoints.m
 % Edited 10/28/2012
 
-% Compute n leja point in the real interval [a,b]
+% Compute n leja points in the real interval [a,b]
 
 function xleja = lejapointsreal(n,a,b)
 
