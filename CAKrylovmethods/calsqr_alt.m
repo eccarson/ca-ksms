@@ -6,7 +6,7 @@
 
 %Input:
 %A: mxn sparse matrix 
-%b: right hand side of least squares system to solve, Ax=b; vector of dimension m
+%b: right hand side of least squares system to solve, Ax=b; vector of dimension n
 %s: number of inner-loop iterations per outer loop; the "s" in "s-step
 %methods"
 %maxits: maximum number of iterations to complete before returning
