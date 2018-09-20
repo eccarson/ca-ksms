@@ -50,8 +50,8 @@ elseif(strcmp(basis_type, 'chebyshev'))
     bet = (dd)^2/(4*gg).*ones(s-1,1);
     gam = [2*gg; gg.*ones(s-1,1)];
     
-%Default to monomial basis
-else
+
+else %monomial basis; note - should not reach this point if basis_type is set as a valid option; this is only a fallback
     
     %Set basis parameters (diagonals of tridiagonal basis change matrix)
     alp = zeros(s,1);
