@@ -19,6 +19,18 @@
 
 function [alp,bet,gam,T] = basisparams( A,s,basis_type )
 
+if (strcmp(basis_type, 'monomial'))
+    alp = zeros(s,1);
+    bet = zeros(s-1,1);
+    gam = ones(s,1);
+
+    %Set diagonals of T matrix
+    T = zeros(s+1,s);
+    T = diag(alp,0) + diag(bet,1) + diag(gam(1:end-1),-1);
+    T=[T;zeros(1,s-1),gam(end)];
+
+else
+
     %Compute full spectrum of A
     evec = eig(full(A));
     
