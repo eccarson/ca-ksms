@@ -67,7 +67,7 @@ elseif(strcmp(basis_type, 'chebyshev'))
     bet = (dd)^2/(4*gamm).*ones(s-1,1);
     gam = [2*gamm; gamm.*ones(s-1,1)];
     
-else %monomial basis
+else %monomial basis; note - should not reach this point if basis_type is set as a valid option; this is only a fallback
     alp = zeros(s,1);
     bet = zeros(s-1,1);
     gam = ones(s,1);
