@@ -39,7 +39,7 @@ x(:,1)  = x0;
 r(:,1)  = r0;
 p(:,1)  = r0;
 
-delta(1) = r0'*rt0;
+delta(1) = rt0'*r0;
 
 %Set outer loop iteration count to 0
 k = 0;
@@ -77,7 +77,7 @@ while its < maxits
     x_c = zeros(4*s+1,s+1);
     
     % Compute Gram vector
-    g = [P,R]'*rt0;
+    g = rt0'*[P,R];
     
     % Compute Gram matrix
     G = [P,R]'*[P,R];
@@ -93,7 +93,7 @@ while its < maxits
         its = its + 1;
       
         %Compute scalar alpha using Gram vector for inner products
-        alpha(its) = delta(its)/( (Tt*p_c(:,j))'*g);
+        alpha(its) = delta(its)/( g*(Tt*p_c(:,j)));
         
         %Compute scalar omega using Gram matrix for inner products
         omega(its) = ( Tt*r_c(:,j) - alpha(its)*Tt*Tt*p_c(:,j) )'*G*(r_c(:,j)-alpha(its)*Tt*p_c(:,j))...
@@ -114,7 +114,7 @@ while its < maxits
         r(:,s*k+j+1)  = [P,R]*r_c(:,j+1);
 
         %Compute scalar delta using Gram vector for inner products
-        delta(its+1) = r_c(:,j+1)'*g;
+        delta(its+1) = g*r_c(:,j+1);
         
         %Compute scalar beta 
         beta(its) = (delta(its+1)/delta(its))*(alpha(its)/omega(its));
