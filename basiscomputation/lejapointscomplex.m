@@ -28,12 +28,19 @@ for j = 1:numel(a)
      
     dist_y = b(j) - b_centr;
     y_step = dist_y/n_perspoke;
-    y_pnts = (b_centr+y_step):y_step:b(j);
+    y_pnts = zeros(1,n_perspoke);
+    y_pnts(1) = b_centr + y_step;
+    for i = 2:numel(y_pnts)
+        y_pnts(i) = y_pnts(i-1)+y_step;
+    end
         
     dist_x = a(j) - a_centr;
     x_step = dist_x/n_perspoke;
     x_pnts = zeros(1,n_perspoke);
-    x_pnts = (a_centr+x_step):x_step:a(j);
+    x_pnts(1) = a_centr + x_step;
+    for i = 2:numel(x_pnts)
+        x_pnts(i) = x_pnts(i-1)+x_step;
+    end
     
     if(numel(y_pnts) == 0)
         y_pnts = zeros(1,n_perspoke);
